@@ -1,0 +1,174 @@
+﻿@model IAExternalDb.Models.Post
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post @Model.id</title>
+    <link rel="stylesheet" href="~/Content/myCSS/Post.css">
+    @Scripts.Render("~/bundles/jquery")
+
+    <script>
+        $(document).ready(function () {
+            $(document).on('click','.Like',(function () {
+                $.ajax({
+                    type: 'Get',
+                    url: '/Post/Like',
+                    data: { 'postID':@Model.id},
+                    success: function (result) {
+                        document.getElementById("LikeSpan").textContent = result + " Likes";
+                        $(".Like").attr('class', 'Liked');
+                        $(".LikeImage").attr('src', "/Images/SitePic/like(clicked).png");
+                        $(".LikeImage").attr('class', "LikedImage");
+                    }
+                });
+            }));
+            $(document).on('click','.Liked',(function () {
+                $.ajax({
+                    type: 'Get',
+                    url: '/Post/DelLike',
+                    data: { 'postID':@Model.id},
+                    success: function (result) {
+                        document.getElementById("LikeSpan").textContent = result + " Likes";
+                        $(".Liked").attr('class', 'Like');
+                        $(".LikedImage").attr('src', "/Images/SitePic/like.png");
+                        $(".LikedImage").attr('class', "LikeImage");
+                    }
+                });
+            }));
+
+            $(document).on('click','.DisLike',(function () {
+                $.ajax({
+                    type: 'Get',
+                    url: '/Post/DisLike',
+                    data: { 'postID':@Model.id},
+                    success: function (result) {
+                        document.getElementById("DisLikeSpan").textContent = result + " DisLikes";
+                        $(".DisLike").attr('class', 'DisLiked');
+                        $(".DisLikeImage").attr('src', "/Images/SitePic/dislike(clicked).png");
+                        $(".DisLikeImage").attr('class', "DisLikedImage");
+                    }
+                });
+            }));
+            $(document).on('click','.DisLiked',(function () {
+                $.ajax({
+                    type: 'Get',
+                    url: '/Post/DelDisLike',
+                    data: { 'postID':@Model.id},
+                    success: function (result) {
+                        document.getElementById("DisLikeSpan").textContent = result + " Dislikes";
+                        $(".DisLiked").attr('class', 'DisLike');
+                        $(".DisLikedImage").attr('src', "/Images/SitePic/dislike.png");
+                        $(".DisLikedImage").attr('class', "DisLikeImage");
+                    }
+                });
+            }));
+
+            $(document).on('click', '.post', function () {
+                $.ajax({
+                    type: 'Get',
+                    url: '/Post/postComment',
+                    data: { 'postID':@Model.id, 'CommentText': $("#commentpost").val()},
+                    success: function (result) {
+                        var adddiv = "<div class=\"comment-place\"><a class=\"name\" href=\"/Profile/myProfile\"><div>" + result + "</div></a><div class=\"CommentText\">" + $("#commentpost").val() + "</div></div>";
+                        $("#Comments").append(adddiv);
+                    }
+                });
+            });
+
+            $(document).on('keypress', '.post', function (e) {
+                if (e.which == 13) {
+                    alert("ENTER");
+                    $.ajax({
+                    type: 'Get',
+                    url: '/Post/postComment',
+                    data: { 'postID':@Model.id, 'CommentText': $("#commentpost").val()},
+                    success: function (result) {
+                        var adddiv = "<div class=\"comment-place\"><a class=\"name\" href=\"/Profile/myProfile\"><div>" + result + "</div></a><div class=\"CommentText\">" + $("#commentpost").val() + "</div></div>";
+                        $("#Comments").append(adddiv);
+                    }
+                });
+                }
+            });
+        });
+    </script>
+</head>
+
+<body>
+    @{
+        Html.RenderPartial("Header", Session["CurrentUser"] as IAExternalDb.Models.User);
+    }
+    <div class="flow">
+        <div class="container">
+            <div class="mid-content">
+                <a>
+                    <div class="img-content">
+                        <img src="~/Images/Posts/@Model.PostImage" alt="">
+                    </div>
+                </a>
+            </div>
+            <div class="bottom-content">
+                <div class="left">
+                    <div class="icons flow">
+                        <div class="comment icon">
+                            @if (ViewBag.CurrentUserLiked)
+                            {
+                                <a  class="Liked"><img class="LikedImage" src="~/Images/SitePic/like(clicked).png" /></a>
+                            }
+                            else
+                            {
+                                <a  class="Like"><img class="LikeImage" src="~/Images/SitePic/like.png" /></a>
+                            }
+
+                        </div>
+                        <div class="heart icon">
+                            @if (ViewBag.CurrentUserDisLiked)
+                            {
+                                <a  class="DisLiked"><img class="DisLikedImage" src="~/Images/SitePic/dislike(clicked).png" /></a>
+                            }
+                            else
+                            {
+                                <a class="DisLike"><img class="DisLikeImage" src="~/Images/SitePic/dislike.png" /></a>
+                            }
+                        </div>
+                    </div>
+                    <div class="profile-details flow">
+                        <p> <span id="LikeSpan">@Model.LikesList.Count Likes</span></p>
+                        <p><span id="DisLikeSpan">@Model.DislikesList.Count Dislikes</span></p>
+                    </div>
+                    <div id="Comments">
+                        <div>
+                            <p class="myCaption" style="color:lawngreen"></p>
+                        </div>
+                        @foreach (var x in Model.CommentList)
+                        {
+                            <div class="comment-place" >
+                                <a class="name" href="/Profile/UserProfile/@x.comment_owner_id"><div>@x.owner_name </div></a><div class="CommentText">@x.text</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="right">
+                </div>
+            </div>
+            <div class="comment-section">
+                <div class="search">
+                    <img class="CommentOwnerImage" src="~/Images/ProfilePictures/@ViewBag.CurrentUser.ProfilePicture" />
+                    <input id="commentpost" type="text" placeholder="Add a comment...">
+                </div>
+                <div class="post">
+                    Post
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</body>
+</html>
